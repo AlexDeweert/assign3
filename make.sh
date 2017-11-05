@@ -1,0 +1,9 @@
+#! /bin/bash
+javac ReceiveCommunications.java
+javac SendCommunications.java
+javac ClientReceiveFromServer.java
+javac ClientSendToServer.java
+javac Client.java
+javac ServerReceiveFromClient.java
+javac ServerSendToClient.java
+javac Server.java
