@@ -5,7 +5,7 @@ public class Server {
 
 	private static final int port = 4444;
 	public static void main( String[] args ) throws Exception {
-		
+
 		ServerSocket serverSocket = new ServerSocket(port);
 		Socket clientSocket = serverSocket.accept();
 
@@ -16,6 +16,5 @@ public class Server {
 		SendCommunications send = new SendCommunications( clientSocket );
 		Thread sendThread = new Thread( send );
 		sendThread.start();
-
 	}
 }
