@@ -39,12 +39,12 @@ public class ReceiveCommunications implements Runnable {
 
 			//Set the reader (BufferedReader object) to the socket input stream
 			reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
-			while( true ) {
+			//while( true ) {
 				//While there exists data in the inputstream print it out
 				while( ( incomingMessage = reader.readLine()) != null ) {
 					System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
 				}
-			}
+			//}
 		} catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();
