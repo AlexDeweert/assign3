@@ -41,7 +41,7 @@ public class ReceiveByteArray {
 			this.length = reader.readInt();
 
 				if( length > 0 ) {
-					System.out.println("Receiving byte array of length " + length + "...");
+					System.out.println( "[ReceiveByteArray Object] receiving byte array of size " + length + "...");
 					this.message = new byte[length];
 					//Fully read in the byte array to message var
 					reader.readFully(message, 0, message.length);

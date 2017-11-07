@@ -41,7 +41,7 @@ public class SendByteArray {
 
 		try {
 
-			System.out.println( "Sending byte array of size " + message.length + "...");
+			System.out.println( "[SendByteArray Object] sending byte array of size " + message.length + "...");
 
 			//The writer sends lines to the socket output based on user input
 			writer = new DataOutputStream( socket.getOutputStream() );
