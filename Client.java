@@ -40,8 +40,7 @@ public class Client {
 		System.out.println("[CLIENT] Receiving encoded PUBLIC KEY from Server...");
 		ReceiveByteArray receiveByteArray = new ReceiveByteArray( socketToServer );
 		receiveByteArray.run();
-		serversEncodedPublicKey = new byte[ receiveByteArray.getIncomingByteArraySize() ];
-		serversEncodedPublicKey = receiveByteArray.getByteArray();
+		serversEncodedPublicKey = Arrays.copyOf( receiveByteArray.getByteArray(), receiveByteArray.getIncomingByteArraySize() );
 
 		//Step 6: Client instantiates a public key from the encoded bytes sent by server
 		System.out.println("[CLIENT] Instantiating a public key from the encoded bytes sent by server...");
