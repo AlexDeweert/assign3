@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
+import java.lang.*;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -16,6 +18,9 @@ public class Client {
 	private static final int port = 4444;
 	private static final String hostname = "localhost";
 	private static byte[] serversEncodedPublicKey;
+
+	//REMOVE THIS AFTER TESTING
+	private static byte[] clientSharedSecret;
 
 	public static void main( String[] args ) throws Exception {
 
@@ -80,10 +85,37 @@ public class Client {
         System.out.println("[CLIENT]: Execute PHASE1 ...");
         //Note here this means that TRUE means this is the last key agreement phase to be executed
         clientKeyAgree.doPhase(serverPublicKey, true);
-        System.out.println("[SERVER]: ClientPublicKey AGREES with ServerPublicKey...");
+        System.out.println("[CLIENT]: ClientPublicKey AGREES with ServerPublicKey...");
 
 
-		/*	COMMUNICATIONS
+        //TESTING STEP - REMOVE THIS FROM FINAL VERSION - ONLY TO CONFIRM
+        //THAT THE SHARED SECRETS AGREE:
+        //At this stage, both Server and Client have completed the DH key
+        //agreement protocol. Both generate the (same) shared secret.
+        try {
+            clientSharedSecret = clientKeyAgree.generateSecret();
+            int clientLen = clientSharedSecret.length;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }        // provide output buffer of required size
+        System.out.println("[CLIENT]: TESTING REMOVE THIS EVENTUALLY Shared secret: " + toHexString(clientSharedSecret));
+
+
+
+        //TODO: What follows next is just a test....
+        //EVENTUALLY we need to make these steps into a realtime back-and-forth chat.
+        //If the user of the program decides they wish for encrypted chat streams:
+        //	1) Generate SecretKeys for the AES Algorithm with the raw shared secret data
+        //	2) Encrypt a plaintext message using AES/CipherBlockChaining, generating a ciphertext
+        //	3) Encode the parameters based on the ciphertext and TRANSMIT those to the server
+        //	4) TRANSMIT the ciphertext byte array to the server
+        //	5) Now the server has the ciphertext parameters AND the byte array ciphertext
+        //	6) Server uses the parameters to decrypt the ciphertext into plaintext
+
+
+
+
+		/*	UNENCRYPTED COMMUNICATIONS
 		*	If the encryption handshake was successful we begin comms with the server
 		*/
 		//This portion is only ran if it had received an encoded public key
@@ -101,5 +133,35 @@ public class Client {
 		else {
 			System.out.println("[CLIENT] Didn't get a byte array from the Server");
 		}
+
+
 	}
+
+	//Utility functions
+	/*
+     * Converts a byte to hex digit and writes to the supplied buffer
+     */
+    private static void byte2hex(byte b, StringBuffer buf) {
+        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        int high = ((b & 0xf0) >> 4);
+        int low = (b & 0x0f);
+        buf.append(hexChars[high]);
+        buf.append(hexChars[low]);
+    }
+
+    /*
+     * Converts a byte array to hex string
+     */
+    private static String toHexString(byte[] block) {
+        StringBuffer buf = new StringBuffer();
+        int len = block.length;
+        for (int i = 0; i < len; i++) {
+            byte2hex(block[i], buf);
+            if (i < len-1) {
+                buf.append(":");
+            }
+        }
+        return buf.toString();
+    }
 }
