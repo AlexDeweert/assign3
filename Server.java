@@ -1,6 +1,5 @@
-import java.io.*;
+import java.util.*;
 import java.net.*;
-import java.util.Arrays;
 import java.lang.*;
 
 import java.io.*;
@@ -17,6 +16,9 @@ public class Server {
 
 	private static final int port = 4444;
 	private static byte[] clientEncodedPublicKey;
+	private static byte[] clientCipherParameters;
+	private static byte[] clientCiphertext;
+	private static byte[] clientPlaintext;
 
 	//REMOVE THIS AFTER TESTING
 	private static byte[] serverSharedSecret;
@@ -83,8 +85,12 @@ public class Server {
         System.out.println("[SERVER]: Using shared secret as SecretKey object...");
         SecretKeySpec serverAesKey = new SecretKeySpec(serverSharedSecret, 0, 16, "AES");
 
-        
 
+
+
+
+		/*ENCRYPTED COMMUNICATIONS
+		*/
         //TODO: What follows next is just a test....
         //EVENTUALLY we need to make these steps into a realtime back-and-forth chat.
         //If the user of the program decides they wish for encrypted chat streams:
@@ -95,25 +101,72 @@ public class Server {
         //	5) Now the server has the ciphertext parameters AND the byte array ciphertext
         //	6) Alice uses the parameters to decrypt the ciphertext into plaintext
 
-		/*	UNENCRYPTED COMMUNICATIONS
-		*/
-		//We only start talking if the public key length is greater than 0 (ie it exists)
-		//We havent yet started a session key for message encryption
-		if( clientEncodedPublicKey.length > 0 ) {
-			System.out.println("[SERVER] Beginning communications with Client...");
-			//Start a thread to send communications
-			SendCommunications send = new SendCommunications( clientSocket );
-			Thread sendThread = new Thread( send );
-			sendThread.start();
+        //RECEIVE CIPHER-PARAMETERS FROM CLIENT
+        System.out.println("[SERVER]: Attempting to receive CIPHER-PARAMETERS from Client...");
+        receiveByteArray = new ReceiveByteArray( clientSocket );
+		receiveByteArray.run();
+		clientCipherParameters = Arrays.copyOf( receiveByteArray.getByteArray(), receiveByteArray.getIncomingByteArraySize() );
 
-			//Start a thread to receive communications
-			ReceiveCommunications receive = new ReceiveCommunications( clientSocket );
-			Thread receiveThread = new Thread( receive );
-			receiveThread.start();
-		}
-		else {
-			System.out.println("[SERVER] Didn't get a byte array from the Client");
-		}
+
+		//SERVER instantiates AlgorithmParameters object from parameter encoding obtained from Client
+		AlgorithmParameters aesParams = AlgorithmParameters.getInstance("AES");
+        aesParams.init(clientCipherParameters);
+        Cipher serverDecryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher serverEncryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        serverEncryptionCipher.init(Cipher.ENCRYPT_MODE, serverAesKey, aesParams);
+        serverDecryptionCipher.init(Cipher.DECRYPT_MODE, serverAesKey, aesParams);
+
+
+		
+
+		
+        
+
+
+
+
+		//RECEIVE A BYTE ARRAY WITH CIPHERTEXT FROM CLIENT
+		//System.out.println("[SERVER]: Attempting to receive CIPHER-TEXT from Client...");
+		// receiveByteArray = new ReceiveByteArray( clientSocket );
+		// receiveByteArray.run();
+		//clientCiphertext = Arrays.copyOf( receiveByteArray.getByteArray(), receiveByteArray.getIncomingByteArraySize() );
+        // byte[] recovered = serverDecryptionCipher.doFinal(clientCiphertext);
+        // String s = new String( recovered );
+        // System.out.println("[SERVER] RECOVERED MESSAGE IS: " + s );
+
+
+        /*  ENCRYPTED COMMUNICATIONS
+        *   If the encryption handshake was successful we begin comms with the server
+        */
+        System.out.println("[SERVER] Beginning secure comms with client...");
+        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher );
+        Thread encryptedReceiveThread = new Thread( encryptedReceive );
+        encryptedReceiveThread.start();
+
+        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher );
+        Thread encryptedSendThread = new Thread( encryptedSend );
+        encryptedSendThread.start();
+
+
+		// /*	UNENCRYPTED COMMUNICATIONS
+		// */
+		// //We only start talking if the public key length is greater than 0 (ie it exists)
+		// //We havent yet started a session key for message encryption
+		// if( clientEncodedPublicKey.length > 0 ) {
+		// 	System.out.println("[SERVER] Beginning communications with Client...");
+		// 	//Start a thread to send communications
+		// 	SendCommunications send = new SendCommunications( clientSocket );
+		// 	Thread sendThread = new Thread( send );
+		// 	sendThread.start();
+
+		// 	//Start a thread to receive communications
+		// 	ReceiveCommunications receive = new ReceiveCommunications( clientSocket );
+		// 	Thread receiveThread = new Thread( receive );
+		// 	receiveThread.start();
+		// }
+		// else {
+		// 	System.out.println("[SERVER] Didn't get a byte array from the Client");
+		// }
 	}
 
 	/*
