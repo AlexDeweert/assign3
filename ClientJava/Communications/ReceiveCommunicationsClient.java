@@ -18,6 +18,9 @@ public class ReceiveCommunications implements Runnable {
 	private Socket socket = null;
 	private BufferedReader reader = null;
 	private String incomingMessage = "";
+	private boolean loop = true;
+	private String specialMessage = "";
+	private boolean continuing = true;
 
 	/*
 	*	Set the socket object to the socket parameter which
@@ -26,6 +29,17 @@ public class ReceiveCommunications implements Runnable {
 	*/
 	public ReceiveCommunications( Socket socket ) {
 		this.socket = socket;
+	}
+
+	public ReceiveCommunications( Socket socket, boolean loop){
+		this.socket = socket;
+		this.loop = loop;
+	}
+
+	public ReceiveCommunications( Socket socket, boolean loop, boolean cont){
+		this.socket = socket;
+		this.loop = loop;
+		this.continuing = cont
 	}
 
 	/*
@@ -39,12 +53,20 @@ public class ReceiveCommunications implements Runnable {
 
 			//Set the reader (BufferedReader object) to the socket input stream
 			reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
-			while( true ) {
+			do{
 				//While there exists data in the inputstream print it out
 				while( ( incomingMessage = reader.readLine()) != null ) {
-					System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+					if(loop){
+						System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+						if(continuing == false){
+							break;
+						}
+					}else{
+						continuing = false;
+						break;
+					}
 				}
-			}
+			}while( continuing );
 		} catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();
@@ -56,5 +78,9 @@ public class ReceiveCommunications implements Runnable {
 	    Date now = new Date();
 	    String strDate = sdf.format(now);
 	    return strDate;
+	}
+
+	public String getMessage(){
+		return incomingMessage;
 	}
 }

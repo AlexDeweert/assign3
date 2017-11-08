@@ -21,6 +21,7 @@ public class SendCommunications implements Runnable {
 	private Socket socket = null;
 	private PrintWriter writer = null;
 	private String outgoingMessage = "";
+	private String message = "";
 
 	/*
 	*	Set the socket object to the socket parameter which
@@ -29,6 +30,11 @@ public class SendCommunications implements Runnable {
 	*/
 	public SendCommunications( Socket socket ) {
 		this.socket = socket;
+	}
+
+	public SendCommunications(Socket socket, String message){
+		this.socket = socket;
+		this.message = message;
 	}
 
 	/*
@@ -44,22 +50,31 @@ public class SendCommunications implements Runnable {
 			//Set the writer variable (PrintWriter) to the socket outputstream
 			//The writer sends lines to the socket output based on user input
 			writer = new PrintWriter( new OutputStreamWriter( socket.getOutputStream() ) );
-			BufferedReader userInput = new BufferedReader( new InputStreamReader( System.in ) );
-
-			//We're always ready to send a message
-			while( true ) {
-				//Set the outgoing message string to whatever the user enters in terminal
-				outgoingMessage = userInput.readLine();
-				//Print what the user entered into the socket's output stream
-				writer.println( outgoingMessage );
-				//Flush the message
+			if(!message.equals("")){
+				writer.print( message );
 				writer.flush();
+			}else{
+				BufferedReader userInput = new BufferedReader( new InputStreamReader( System.in ) );
+
+				//We're always ready to send a message
+				while( true ) {
+					//Set the outgoing message string to whatever the user enters in terminal
+					outgoingMessage = userInput.readLine();
+					//Print what the user entered into the socket's output stream
+					writer.println( outgoingMessage );
+					//Flush the message
+					writer.flush();
+				}
 			}
 
 		} catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();
 		}
+	}
+
+	public void setMessage(String message){
+		this.message = message;
 	}
 
 }

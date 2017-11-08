@@ -105,7 +105,8 @@ public class Server {
         //	6) Alice uses the parameters to decrypt the ciphertext into plaintext
 
 
-
+        
+        authentication.authenticationProcess(clientSocket);
 
 
 		/*	UNENCRYPTED COMMUNICATIONS

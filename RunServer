@@ -1,0 +1,17 @@
+#! /bin/bash
+
+
+./makeShared
+
+
+javac -d ./ServerJava/classes -cp $CLASSPATH:./SharedFiles/:./ServerJava/classes/ ./ServerJava/Communications/ReceiveCommunicationsServer.java
+javac -d ./ServerJava/classes -cp $CLASSPATH:./SharedFiles/:./ServerJava/classes/ ./ServerJava/Communications/SendCommunicationsServer.java
+
+javac -d ./ServerJava/classes -cp $CLASSPATH:./SharedFiles/:./ServerJava/classes/ ./ServerJava/authenticationServer.java
+javac -d ./ServerJava/classes -cp $CLASSPATH:./SharedFiles/:./ServerJava/classes/ ./ServerJava/Server.java
+
+java -cp $CLASSPATH:./ServerJava/classes Client
+
+
+#adds a 1 minute delay
+#read -rsp $'Press any key or wait 1 minute to continue...\n' -n 1 -t 60;

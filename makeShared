@@ -1,0 +1,10 @@
+#! /bin/bash
+
+mkdir ./SharedFiles/classes 2> test.txt
+rm test.txt
+
+javac -d ./SharedFiles/classes -cp $CLASSPATH:./SharedFiles:./SharedFiles/classes ./SharedFiles/ReceiveCommunications.java
+javac -d ./SharedFiles/classes -cp $CLASSPATH:./SharedFiles:./SharedFiles/classes ./SharedFiles/SendCommunications.java
+javac -d ./SharedFiles/classes -cp $CLASSPATH:./SharedFiles:./SharedFiles/classes ./SharedFiles/ReceiveByteArray.java
+javac -d ./SharedFiles/classes -cp $CLASSPATH:./SharedFiles:./SharedFiles/classes ./SharedFiles/SendByteArray.java
+

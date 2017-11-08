@@ -26,7 +26,16 @@ public class Client {
 
 		//First you gotta open a connection to the server
 		System.out.println("[CLIENT] Generating socketToServer...");
-		Socket socketToServer = new Socket(hostname, port);
+        boolean looper = true;
+        while(looper){
+            looper = false;
+            try{
+    		  Socket socketToServer = new Socket(hostname, port);
+            }catch(Exception e){
+                looper = true;
+                Thread.sleep(100);
+            }
+        }
 
 		/*	KEYGEN
 		*	Here we attempt to create secure communications with the
@@ -113,6 +122,13 @@ public class Client {
         //	6) Server uses the parameters to decrypt the ciphertext into plaintext
 
 
+
+
+        /*
+			initial connection with server, establishing security protocols.
+        */
+		ReceiveCommunications wait = new ReceiveCommunications(socketToServer, true, false);
+		
 
 
 		/*	UNENCRYPTED COMMUNICATIONS
