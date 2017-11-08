@@ -1,6 +1,0 @@
-<<<<<<< HEAD
-hello
-im a poop
-=======
-boner
->>>>>>> 419609553c3861a9e58e2871f5c2eac35e62c9b2
