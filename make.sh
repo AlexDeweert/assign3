@@ -1,5 +1,4 @@
 #! /bin/bash
-echo "" > text.txt
 
 mkdir classes 2> test.txt
 rm test.txt
