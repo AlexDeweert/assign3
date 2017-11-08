@@ -86,21 +86,6 @@ public class Client {
         clientKeyAgree.doPhase(serverPublicKey, true);
         System.out.println("[CLIENT]: ClientPublicKey AGREES with ServerPublicKey...");
 
-
-        //TESTING STEP - REMOVE THIS FROM FINAL VERSION - ONLY TO CONFIRM
-        //THAT THE SHARED SECRETS AGREE:
-        //At this stage, both Server and Client have completed the DH key
-        //agreement protocol. Both generate the (same) shared secret.
-        try {
-            clientSharedSecret = clientKeyAgree.generateSecret();
-            int clientLen = clientSharedSecret.length;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }        // provide output buffer of required size
-        System.out.println("[CLIENT]: TESTING REMOVE THIS EVENTUALLY Shared secret: " + toHexString(clientSharedSecret));
-
-
-
         //TODO: What follows next is just a test....
         //EVENTUALLY we need to make these steps into a realtime back-and-forth chat.
         //If the user of the program decides they wish for encrypted chat streams:
@@ -111,6 +96,17 @@ public class Client {
         //	5) Now the server has the ciphertext parameters AND the byte array ciphertext
         //	6) Server uses the parameters to decrypt the ciphertext into plaintext
 
+
+        //GENERATE AES KEY TO ENCRYPT A MESSAGE
+        clientSharedSecret = clientKeyAgree.generateSecret();
+        System.out.println("[CLIENT]: Using shared secret as SecretKey object...");
+        SecretKeySpec clientAesKey = new SecretKeySpec(clientSharedSecret, 0, 16, "AES");
+
+        //ENCRYPT A PLAINTEXT
+        Cipher serverCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        serverCipher.init(Cipher.ENCRYPT_MODE, clientAesKey);
+        byte[] cleartext = "This is just an example".getBytes();
+        byte[] ciphertext = bobCipher.doFinal(cleartext);
 
 
 

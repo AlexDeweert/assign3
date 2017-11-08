@@ -78,21 +78,12 @@ public class Server {
         serverKeyAgree.doPhase(clientPublicKey, true);
         System.out.println("[SERVER]: ServerPublicKey AGREES with ClientPublicKey ...");
 
+        //GENERATE AES KEY
+        serverSharedSecret = serverKeyAgree.generateSecret();
+        System.out.println("[SERVER]: Using shared secret as SecretKey object...");
+        SecretKeySpec serverAesKey = new SecretKeySpec(serverSharedSecret, 0, 16, "AES");
 
-        //TESTING STEP - REMOVE THIS FROM FINAL VERSION - ONLY TO CONFIRM
-        //THAT THE SHARED SECRETS AGREE:
-        //At this stage, both Server and Client have completed the DH key
-        //agreement protocol. Both generate the (same) shared secret.
-        try {
-            serverSharedSecret = serverKeyAgree.generateSecret();
-            int serverLen = serverSharedSecret.length;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }        // provide output buffer of required size
-        System.out.println("[SERVER]: TESTING REMOVE THIS EVENTUALLY Shared secret: " + toHexString(serverSharedSecret));
-
-
-
+        
 
         //TODO: What follows next is just a test....
         //EVENTUALLY we need to make these steps into a realtime back-and-forth chat.
@@ -103,10 +94,6 @@ public class Server {
         //	4) TRANSMIT the ciphertext byte array to the server
         //	5) Now the server has the ciphertext parameters AND the byte array ciphertext
         //	6) Alice uses the parameters to decrypt the ciphertext into plaintext
-
-
-
-
 
 		/*	UNENCRYPTED COMMUNICATIONS
 		*/
