@@ -3,6 +3,10 @@
 ./makeShared
 
 
+mkdir ./ClientJava/classes 2> test.txt
+rm test.txt
+
+
 javac -d ./ClientJava/classes -cp $CLASSPATH:./SharedFiles/:./ClientJava/classes/ ./ClientJava/Communications/ReceiveCommunicationsClient.java
 javac -d ./ClientJava/classes -cp $CLASSPATH:./SharedFiles/:./ClientJava/classes/ ./ClientJava/Communications/SendCommunicationsClient.java
 
@@ -10,6 +14,9 @@ javac -d ./ClientJava/classes -cp $CLASSPATH:./SharedFiles/:./ClientJava/classes
 javac -d ./ClientJava/classes -cp $CLASSPATH:./SharedFiles/:./ClientJava/classes/ ./ClientJava/Client.java
 
 java -cp $CLASSPATH:./ClientJava/classes Client
+
+rm ./ClientJava/classes *.class
+rm ./SharedFiles/classes *.class
 
 
 #adds a 1 minute delay
