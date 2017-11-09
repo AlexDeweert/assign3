@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -53,19 +55,30 @@ public class ReceiveEncryptedComms implements Runnable {
 				reader = new DataInputStream( socket.getInputStream() );
 				this.length = reader.readInt();
 				if( length > 0 ) {
-					System.out.println( "[ReceiveEncryptedComms Object] receiving byte array of size " + length + "...");
+					//System.out.println( "[ReceiveEncryptedComms Object] receiving byte array of size " + length + "...");
 					this.ciphertext = new byte[length];
 					reader.readFully(ciphertext, 0, ciphertext.length);
 					recovered = decryptionCipher.doFinal(ciphertext);
 					s = new String( recovered );
-					System.out.println(s);
+					System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
 				}
-			}
-				
-			
-		} catch (Exception e) {
+			}	
+		} 
+		catch ( EOFException e ) {
+			System.out.println("Chat disconnected");
+			System.exit(0);
+		}
+		catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();
 		}
+
+	}
+
+	public static String getCurrentTimeStamp() {
+	    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	    Date now = new Date();
+	    String strDate = sdf.format(now);
+	    return strDate;
 	}
 }
