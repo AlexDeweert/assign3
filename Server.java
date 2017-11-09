@@ -19,9 +19,15 @@ public class Server {
 	private static byte[] clientCipherParameters;
 	private static byte[] clientCiphertext;
 	private static byte[] clientPlaintext;
+	
 
-	//REMOVE THIS AFTER TESTING
+	//REMOVE THIS AFTER TESTING (check first)
 	private static byte[] serverSharedSecret;
+
+	private static String paramString = "...";
+	private static boolean encrypt_chat = false;
+	private static boolean veryify_message_integrity = false;
+	private static boolean use_password_authentication = false;
 
 	public static void main( String[] args ) throws Exception {
 
@@ -33,6 +39,31 @@ public class Server {
 		Socket clientSocket = serverSocket.accept();
 
 
+		/* We must first ask the Server what kind of parameters it would like to run
+		*  1) Confidentiality: Encrypted chat messages (AES encryption)
+		*  2) Integrity: Verifying that the messages received have not been altered (Checksum)
+		*  3) Authentication: Both the Client and Server enter have a username and password
+		*/
+		System.out.println("[SERVER] Sending chat parameter choices to client...");
+		checkUserChoices();
+		byte[] paramBytes = paramString.getBytes();
+		SendByteArray sendChatParameters = new SendByteArray( clientSocket, paramBytes );
+		sendChatParameters.run();
+
+		//Server sent its params now we receive the params from client and verify that they match
+		ReceiveByteArray receiveChatParameters = new ReceiveByteArray( clientSocket );
+        receiveChatParameters.run();
+        byte[] clientChatParamsBytes;
+        clientChatParamsBytes = Arrays.copyOf( receiveChatParameters.getByteArray(), receiveChatParameters.getIncomingByteArraySize() );
+        String clientChatParams = new String( clientChatParamsBytes );
+        if( clientChatParams.equals( paramString ) ) {
+            System.out.println("[SERVER] Client's chat parameters MATCH Server's chat parameters");
+        }
+        else {
+            System.out.println("[SERVER] Client's chat parameters DO NOT MATCH Server's chat parameters");
+        }
+
+
 
 		/*	KEYGEN
 		*	Here we attempt to create secure communications with the
@@ -41,15 +72,19 @@ public class Server {
 		*/
 		//Step 1: Server first generates a keypair
 		System.out.println("[SERVER] Generating keypair...");
-		KeyPair serverKeypair = generateKeypair();
+		KeyPairGenerator serverKeypairGen = KeyPairGenerator.getInstance("DH");
+        serverKeypairGen.initialize(2048);
+		KeyPair serverKeypair = serverKeypairGen.generateKeyPair();
 
 		//Step 2: Server generates and initializes a KeyAgreement object
 		System.out.println("[SERVER] Generating and initializing a KeyAgreement object...");
-		KeyAgreement serverKeyAgree = initKeyAgreementObject( serverKeypair );
+		KeyAgreement serverKeyAgree = KeyAgreement.getInstance("DH");
+        serverKeyAgree.init(serverKeypair.getPrivate());
 
 		//Step 3: Encode the public key from the keypair
 		System.out.println("[SERVER] Generating and initializing a KeyAgreement object...");
-		byte[] serversEncodedPublicKey = encodePublicKey( serverKeypair );
+		byte[] serversEncodedPublicKey = serverKeypair.getPublic().getEncoded();
+		//encodePublicKey( serverKeypair );
 
 		//Step 4: Server sends the ENCODED PUBLIC KEY to the Client with a SendByteArray object
 		System.out.println("[SERVER] sends the ENCODED PUBLIC KEY to the Client with a SendByteArray object...");
@@ -85,10 +120,6 @@ public class Server {
         System.out.println("[SERVER]: Using shared secret as SecretKey object...");
         SecretKeySpec serverAesKey = new SecretKeySpec(serverSharedSecret, 0, 16, "AES");
 
-
-
-
-
 		/*ENCRYPTED COMMUNICATIONS
 		*/
         //TODO: What follows next is just a test....
@@ -117,113 +148,72 @@ public class Server {
         serverDecryptionCipher.init(Cipher.DECRYPT_MODE, serverAesKey, aesParams);
 
 
-		
-
-		
-        
-
-
-
-
-		//RECEIVE A BYTE ARRAY WITH CIPHERTEXT FROM CLIENT
-		//System.out.println("[SERVER]: Attempting to receive CIPHER-TEXT from Client...");
-		// receiveByteArray = new ReceiveByteArray( clientSocket );
-		// receiveByteArray.run();
-		//clientCiphertext = Arrays.copyOf( receiveByteArray.getByteArray(), receiveByteArray.getIncomingByteArraySize() );
-        // byte[] recovered = serverDecryptionCipher.doFinal(clientCiphertext);
-        // String s = new String( recovered );
-        // System.out.println("[SERVER] RECOVERED MESSAGE IS: " + s );
-
-
-        /*  ENCRYPTED COMMUNICATIONS
+        /*  ENCRYPTED CHAT
         *   If the encryption handshake was successful we begin comms with the server
         */
-        System.out.println("[SERVER] Beginning secure comms with client...");
-        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher );
-        Thread encryptedReceiveThread = new Thread( encryptedReceive );
-        encryptedReceiveThread.start();
+        if( encrypt_chat ) {
+	        System.out.println("[SERVER] Beginning ENCRYPTED comms with client...");
+	        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher );
+	        Thread encryptedReceiveThread = new Thread( encryptedReceive );
+	        encryptedReceiveThread.start();
 
-        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher );
-        Thread encryptedSendThread = new Thread( encryptedSend );
-        encryptedSendThread.start();
-
-
-		// /*	UNENCRYPTED COMMUNICATIONS
-		// */
-		// //We only start talking if the public key length is greater than 0 (ie it exists)
-		// //We havent yet started a session key for message encryption
-		// if( clientEncodedPublicKey.length > 0 ) {
-		// 	System.out.println("[SERVER] Beginning communications with Client...");
-		// 	//Start a thread to send communications
-		// 	SendCommunications send = new SendCommunications( clientSocket );
-		// 	Thread sendThread = new Thread( send );
-		// 	sendThread.start();
-
-		// 	//Start a thread to receive communications
-		// 	ReceiveCommunications receive = new ReceiveCommunications( clientSocket );
-		// 	Thread receiveThread = new Thread( receive );
-		// 	receiveThread.start();
-		// }
-		// else {
-		// 	System.out.println("[SERVER] Didn't get a byte array from the Client");
-		// }
-	}
-
-	/*
-	*	Generate a keypair based on the Diffie Hellman protocol
-	*/
-	public static KeyPair generateKeypair() throws NoSuchAlgorithmException {
-		KeyPairGenerator serverKeypairGen = KeyPairGenerator.getInstance("DH");
-        serverKeypairGen.initialize(2048);
-        KeyPair serverKeypair = serverKeypairGen.generateKeyPair();
-        return serverKeypair;
-	}
-
-	/*
-	*	Create and Initialize a Diffie-Hellman KeyAgreement Object
-	*/
-	public static KeyAgreement initKeyAgreementObject( KeyPair serverKeypair ) throws Exception {
-        KeyAgreement serverKeyAgree = KeyAgreement.getInstance("DH");
-        serverKeyAgree.init(serverKeypair.getPrivate());
-        return serverKeyAgree;
-	}
-
-	/*
-	*	Server encodes it's public key
-	*/
-	public static byte[] encodePublicKey ( KeyPair serverKeypair ){
-		return serverKeypair.getPublic().getEncoded();
-	}
-
-
-	//Utility functions
-	/*
-     * Converts a byte to hex digit and writes to the supplied buffer
-     */
-    private static void byte2hex(byte b, StringBuffer buf) {
-        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        int high = ((b & 0xf0) >> 4);
-        int low = (b & 0x0f);
-        buf.append(hexChars[high]);
-        buf.append(hexChars[low]);
-    }
-
-    /*
-     * Converts a byte array to hex string
-     */
-    private static String toHexString(byte[] block) {
-        StringBuffer buf = new StringBuffer();
-        int len = block.length;
-        for (int i = 0; i < len; i++) {
-            byte2hex(block[i], buf);
-            if (i < len-1) {
-                buf.append(":");
-            }
+	        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher );
+	        Thread encryptedSendThread = new Thread( encryptedSend );
+	        encryptedSendThread.start();	
         }
-        return buf.toString();
+
+        /*	UNENCRYPTED CHAT
+		*/
+        else {
+			System.out.println("[SERVER] Beginning UNENCRYPTED communications with Client...");
+			//Start a thread to send communications
+			SendCommunications send = new SendCommunications( clientSocket );
+			Thread sendThread = new Thread( send );
+			sendThread.start();
+
+			//Start a thread to receive communications
+			ReceiveCommunications receive = new ReceiveCommunications( clientSocket );
+			Thread receiveThread = new Thread( receive );
+			receiveThread.start();
+        }
+	}
+
+	public static void checkUserChoices() {
+        Scanner in = new Scanner( System.in );
+
+        System.out.println("Would you like encrypted communication? Type (y) or (n)...");
+        String choice = in.nextLine();
+        if( choice.equals("y") ) {
+            encrypt_chat = true;
+            paramString = paramString.substring(0,0)+'y'+paramString.substring(1);
+            System.out.println(paramString);
+        } 
+
+        System.out.println("Would you like message integrity verified? Type (y) or (n)...");
+        choice = in.nextLine();
+        if( choice.equals("y") ) {
+            veryify_message_integrity = true;
+            paramString = paramString.substring(0,1)+'y'+paramString.substring(2);
+            System.out.println(paramString);
+        }
+
+        System.out.println("Would you like to use password authentication? Type (y) or (n)...");
+        choice = in.nextLine();
+        if( choice.equals("y") ) {
+            use_password_authentication = true;
+            paramString = paramString.substring(0,2)+'y'+paramString.substring(3);
+            System.out.println(paramString);
+        }
+
+        System.out.println( "You chose the following parameters for chat:");
+        System.out.println("Param choice string: " + paramString );
+
+        if( encrypt_chat ) System.out.println("Encrypted chat");
+        else System.out.println("Unencrypted chat.");
+        if( veryify_message_integrity ) System.out.println("Verified message integrity");
+        else System.out.println("Message integrity not verified.");
+        if( use_password_authentication ) System.out.println("Password authentication");
+        else System.out.println("No password authentication.");
+        System.out.println();
     }
-
-
-
 }

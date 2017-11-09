@@ -49,9 +49,6 @@ public class ReceiveEncryptedComms implements Runnable {
 	public void run() {
 
 		try {
-			//Set the reader to the socket input stream
-			//Gets the length of the incoming message
-			
 			while( true ) {
 				reader = new DataInputStream( socket.getInputStream() );
 				this.length = reader.readInt();
