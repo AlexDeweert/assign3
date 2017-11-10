@@ -41,10 +41,10 @@ public class HashByteArray{
 		return val;
 	}
 
-	public static byte[] encryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
+	public static byte[] encryptHash(byte[] input, Cipher encryptionCipher){
 		try{
-			Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			encryptionCipher.init(Cipher.ENCRYPT_MODE, sks, ap);
+			//Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			//encryptionCipher.init(Cipher.ENCRYPT_MODE, sks, ap);
 			byte [] arr = hashByteArray(input);
 			byte [] encryptedHash = encryptionCipher.doFinal(arr);
 			return encryptedHash;
@@ -57,10 +57,10 @@ public class HashByteArray{
 
 	}
 
-	public static byte[] decryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
+	public static byte[] decryptHash(byte[] input, Cipher decryptionCipher){
 		try{
-			Cipher decryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			decryptionCipher.init(Cipher.DECRYPT_MODE, sks, ap);
+			//Cipher decryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			//decryptionCipher.init(Cipher.DECRYPT_MODE, sks, ap);
 			byte [] decryptedHash = decryptionCipher.doFinal(input);
 			return decryptedHash;
 		}catch (Exception e) {
@@ -71,10 +71,10 @@ public class HashByteArray{
 		return input;
 	}
 
-	public static void sendHash(byte [] hash, Socket socket, SecretKeySpec sks, AlgorithmParameters ap){
+	public static void sendHash(byte [] hash, Socket socket, Cipher cipher){
 		try{
 
-			byte [] fingerprint = encryptHash(hash, sks, ap);
+			byte [] fingerprint = encryptHash(hash, cipher);
 			DataOutputStream writer = new DataOutputStream( socket.getOutputStream() );
 			//added this incase you wanted to do the length stuff
 			writer.writeInt( fingerprint.length );
