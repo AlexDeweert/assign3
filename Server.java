@@ -141,6 +141,17 @@ public class Server {
 	        /*  ENCRYPTED CHAT
 	        *   If the encryption handshake was successful we begin comms with the server
 	        */
+	        if(use_password_authentication){
+	        	System.out.println("[SERVER] past if\n");
+	        	boolean which = SendAuthorizationRequest.sendChallenge(clientSocket, serverEncryptionCipher);
+	        	if(!which){
+	        		System.out.println("[SERVER] Authorization failed, client is not trustworthy\n");
+	        	}else{
+	        		System.out.println("[SERVER] Authorization passed, client is trustworthy\n");
+	        	}
+	        	RecieveAuthorizationRequest.recieveChallenge(serverEncryptionCipher, clientSocket);
+	        }
+
 	        if( encrypt_chat && veryify_message_integrity) {
 		        System.out.println("[SERVER] Beginning ENCRYPTED comms with Client, message INTEGRITY being checked...");
 		        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher, serverEncryptionCipher, true );

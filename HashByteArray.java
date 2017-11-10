@@ -86,5 +86,35 @@ public class HashByteArray{
 		}
 	}
 
+	public static void sendNotHash(byte [] plain, Socket socket, Cipher cipher){
+		try{
+
+			byte [] fingerprint = encryptPlain(plain, cipher);
+			DataOutputStream writer = new DataOutputStream( socket.getOutputStream() );
+			//added this incase you wanted to do the length stuff
+			writer.writeInt( fingerprint.length );
+			writer.write(fingerprint);
+
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
+	}
+
+	public static byte[] encryptPlain(byte[] input, Cipher encryptionCipher){
+		try{
+			//Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			//encryptionCipher.init(Cipher.ENCRYPT_MODE, sks, ap);
+			byte [] encryptedPlain = encryptionCipher.doFinal(input);
+			return encryptedPlain;
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
+
+		return input;
+
+	}
+
 
 }
