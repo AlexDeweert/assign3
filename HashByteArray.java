@@ -16,4 +16,18 @@ public class HashByteArray{
 		byte returnVal = sha.digest(val);
 		return returnVal;
 	}
+
+	public static byte[] encryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
+
+	}
+
+	public static byte[] decryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
+		
+	}
+
+	public static void sendHash(byte [] hash, Socket socket){
+
+	}
+
+	
 }
