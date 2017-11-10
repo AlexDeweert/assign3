@@ -15,41 +15,70 @@ public class HashByteArray{
 
 
 	public static byte[] hashByteArray(byte[] input){
-		MessageDigest sha = MessageDigest.getInstance("SHA-256");
-		byte [] val = sha.digest(input);
-		return val;
+		try{
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			byte [] val = sha.digest(input);
+			return val;
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
+		return input;
 	}
 
 	public static byte[] hashString(String input){
-		byte [] val = input.getBytes();
-		MessageDigest sha = MessageDigest.getInstance("SHA-256");
-		byte returnVal = sha.digest(val);
-		return returnVal;
+		
+			byte [] val = input.getBytes();
+		try{
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			byte [] returnVal = sha.digest(val);
+			return returnVal;
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
+
+		return val;
 	}
 
 	public static byte[] encryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
+		try{
+			Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			encryptionCipher.init(Cipher.ENCRYPT_MODE, sks, ap);
+			byte [] arr = hashByteArray(input);
+			byte [] encryptedHash = encryptionCipher.doFinal(arr);
+			return encryptedHash;
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
 
-		Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		encryptionCipher.init(Cipher.ENCRYPT_MODE, sks, ap);
-		byte [] arr = hashByteArray(input);
-		byte [] encryptedHash = encryptionCipher.doFinal(arr);
-		return encryptedHash;
+		return input;
 
 	}
 
 	public static byte[] decryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
-		Cipher decryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		decryptionCipher.init(Cipher.DECRYPT_MODE, sks, ap);
-		byte [] decryptedHash = decryptionCipher.doFinal(input);
-		return decryptedHash;
+		try{
+			Cipher decryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			decryptionCipher.init(Cipher.DECRYPT_MODE, sks, ap);
+			byte [] decryptedHash = decryptionCipher.doFinal(input);
+			return decryptedHash;
+		}catch (Exception e) {
+			System.out.println( e.toString() );
+			e.printStackTrace();
+		}
+
+		return input;
 	}
 
 	public static void sendHash(byte [] hash, Socket socket, SecretKeySpec sks, AlgorithmParameters ap){
 		try{
 
-			byte [] fingerprint = encryptionHash(hash, sks, ap);
-			writer = new PrintWriter( new OutputStreamWriter( socket.getOutputStream() ) );
-			writer.println(fingerprint);
+			byte [] fingerprint = encryptHash(hash, sks, ap);
+			DataOutputStream writer = new DataOutputStream( socket.getOutputStream() );
+			//added this incase you wanted to do the length stuff
+			writer.writeInt( fingerprint.length );
+			writer.write(fingerprint);
 
 		}catch (Exception e) {
 			System.out.println( e.toString() );
