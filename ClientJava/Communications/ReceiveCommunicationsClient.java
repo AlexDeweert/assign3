@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 *	or any class whicn requires the ability to receive
 *	text data through a socket input stream.
 */
-public class ReceiveCommunications implements Runnable {
+public class ReceiveCommunicationsClient implements Runnable {
 	
 	/*
 	*	Init vars
@@ -27,16 +27,16 @@ public class ReceiveCommunications implements Runnable {
 	*	had been passed in likely by a Server or Client object.
 	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
 	*/
-	public ReceiveCommunications( Socket socket ) {
+	public ReceiveCommunicationsClient( Socket socket ) {
 		this.socket = socket;
 	}
 
-	public ReceiveCommunications( Socket socket, boolean loop){
+	public ReceiveCommunicationsClient( Socket socket, boolean loop){
 		this.socket = socket;
 		this.loop = loop;
 	}
 
-	public ReceiveCommunications( Socket socket, boolean loop, boolean cont){
+	public ReceiveCommunicationsClient( Socket socket, boolean loop, boolean cont){
 		this.socket = socket;
 		this.loop = loop;
 		this.continuing = cont

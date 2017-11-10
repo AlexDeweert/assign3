@@ -12,7 +12,7 @@ import java.net.*;
 *	or any class whicn requires the ability to send
 *	Text data through a socket output stream.
 */
-public class SendCommunications implements Runnable {
+public class SendCommunicationsServer implements Runnable {
 
 	/*
 	*	Init vars
@@ -28,11 +28,11 @@ public class SendCommunications implements Runnable {
 	*	had been passed in likely by a Server or Client object.
 	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
 	*/
-	public SendCommunications( Socket socket ) {
+	public SendCommunicationsServer( Socket socket ) {
 		this.socket = socket;
 	}
 
-	public SendCommunications(Socket socket, String message){
+	public SendCommunicationsServer(Socket socket, String message){
 		this.socket = socket;
 		this.message = message;
 	}

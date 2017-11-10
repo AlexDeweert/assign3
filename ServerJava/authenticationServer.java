@@ -23,8 +23,8 @@ public class authenticationServer{
 		Scanner console = new Scanner(System.in);
 		String choice = "";
 		boolean invalid = true;
-		SendCommunications ask = new SendCommunications(connection);
-		ReceiveCommunications tell = new ReceiveCommunications(connection, false);
+		SendCommunicationsServer ask = new SendCommunicationsServer(connection);
+		ReceiveCommunicationsServer tell = new ReceiveCommunicationsServer(connection, false);
 		while(invalid){
 			invalid = false;
 			ask.setMessage("Log In: 1\nSign Up: 2\nProceed As Guest: press any key\n> ");
@@ -46,27 +46,5 @@ public class authenticationServer{
 		}
 
 	}
-
-	public static void loginUser(Scanner console){
-		String username;
-		String password;
-		System.out.print("Please enter your username: ");
-		username = console.nextLine();
-
-		System.out.print("Please enter your password: ");
-		password = console.nextLine();
-
-
-
-
-	}
-
-	public static void signUpUser(){
-
-	}
-
-	public static void loginAsGuest(){
-
-	}	
 
 }
