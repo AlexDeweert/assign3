@@ -192,6 +192,9 @@ public class Server {
 				Thread receiveThread = new Thread( receive );
 				receiveThread.start();
 	        }
+	        else {
+                System.out.println("Nothing exists for the options you chose");
+            }
 		}
 		else { //The chat security parameters do not match, so don't don't initiate a session
             System.out.println("Security chat parameters do not match. Session terminated");
