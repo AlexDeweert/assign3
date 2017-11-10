@@ -18,16 +18,16 @@ public class HashByteArray{
 	}
 
 	public static byte[] encryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
-
+		Cipher encryptionCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
 	}
 
 	public static byte[] decryptHash(byte[] input, SecretKeySpec sks, AlgorithmParameters ap){
 		
 	}
 
-	public static void sendHash(byte [] hash, Socket socket){
+	public static void sendHash(byte [] hash, Socket socket, SecretKeySpec sks, AlgorithmParameters ap){
 
 	}
 
-	
+
 }
