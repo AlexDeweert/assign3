@@ -80,7 +80,7 @@ public class ReceiveEncryptedComms implements Runnable {
 
 						reader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
 						//Decrypt the has fingerprint
-						decryptedHashFingerprint = decryptionCipher.doFinal(encryptedHashFingerprint);
+						decryptedHashFingerprint = decryptionCipher.doFinal( encryptedHashFingerprint );
 						//finalHash = HashByteArray.decryptHash( decryptedHashFingerprint, decryptionCipher );
 
 						//Receive the actual message

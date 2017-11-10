@@ -66,7 +66,8 @@ public class SendEncryptedComms implements Runnable {
 				if( sendFingerprintFirst ) {
 
 					//First send an encrypted hashed version of the plaintext
-					HashByteArray.sendHash( HashByteArray.hashByteArray( cleartext ), socket, encryptionCipher );
+					//HashByteArray.sendHash( HashByteArray.hashString( message ), socket, encryptionCipher );
+					HashByteArray.sendHash( cleartext, socket, encryptionCipher );
 
 					//THen send the ciphertext, the receivier will decypt the ciphertext
 					//then hash it and make sure the hash values match up

@@ -1,8 +1,8 @@
-import java.util.Date;
-import java.text.SimpleDateFormat;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -13,12 +13,6 @@ import javax.crypto.spec.*;
 import javax.crypto.interfaces.*;
 import com.sun.crypto.provider.SunJCE;
 
-/*
-*	ReceiveCommunications is threadwise class
-*	which can be instantiated by Server and Client
-*	or any class whicn requires the ability to receive
-*	text data through a socket input stream.
-*/
 public class ReceiveCommunications implements Runnable {
 	
 	/*
@@ -26,23 +20,24 @@ public class ReceiveCommunications implements Runnable {
 	*	The socket object which binds a port for IP/UDP comms
 	*/
 	private Socket socket = null;
-	private BufferedReader reader = null;
-	private DataInputStream fingerprintReader = null;
-	private String incomingMessage = "";
+	private DataInputStream reader = null;
+	private byte[] ciphertext;
+	private byte[] cleartext;
 	private byte[] recovered;
 	private byte[] decryptedHashFingerprint;
 	private byte[] finalHash;
 	private byte[] encryptedHashFingerprint;
 	private byte[] hashNeverTransmitted;
+	private int length;
+	private String s;
 	private Cipher decryptionCipher;
 	private Cipher encryptionCipher;
 	private boolean receiveFingerprintFirst;
-	private int length;
 
 	/*
 	*	Set the socket object to the socket parameter which
 	*	had been passed in likely by a Server or Client object.
-	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
+	*	Set the byte array to that which was passed in by a client or server
 	*/
 	public ReceiveCommunications( Socket socket, Cipher decryptionCipher, Cipher encryptionCipher, boolean receiveFingerprintFirst ) {
 		this.socket = socket;
@@ -59,60 +54,74 @@ public class ReceiveCommunications implements Runnable {
 	public void run() {
 
 		try {
+			while( true ) {
 
+				//Receive an encypted hash fingerprint
+				//Decrypt the hashed fingerprint
+				
+				//Receive the actual message
+				//Descrypt the actual message
+				//Rehash the message
 
-			if( receiveFingerprintFirst ) {
-					fingerprintReader = new DataInputStream( socket.getInputStream() );
-					this.length = fingerprintReader.readInt();
+				//Compare the two hashes, if equal good
+				//If not equal warn the user
+
+				//Receive an encrypted hash fingerprint
+				if( receiveFingerprintFirst ) {
+					reader = new DataInputStream( socket.getInputStream() );
+					this.length = reader.readInt();
 					if( length > 0 ) {
 						this.encryptedHashFingerprint = new byte[length];
 
-						fingerprintReader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
+						reader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
 						//Decrypt the has fingerprint
-						decryptedHashFingerprint = decryptionCipher.doFinal(encryptedHashFingerprint);
-						finalHash = HashByteArray.decryptHash( decryptedHashFingerprint, decryptionCipher );
+						decryptedHashFingerprint = decryptionCipher.doFinal( encryptedHashFingerprint );
+						//finalHash = HashByteArray.decryptHash( decryptedHashFingerprint, decryptionCipher );
 
 						//Receive the actual message
-						// this.length = fingerprintReader.readInt();
-						// this.ciphertext = new byte[length];
-						// fingerprintReader.readFully(ciphertext, 0, ciphertext.length);
-						// recovered = decryptionCipher.doFinal(ciphertext);
-						// s = new String( recovered );
-						//Set the reader (BufferedReader object) to the socket input stream
-						reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
-						while( ( incomingMessage = reader.readLine()) != null ) {
-							System.out.println("Received a message: " + incomingMessage );
-							recovered = incomingMessage.getBytes();
-						}
+						this.length = reader.readInt();
+						this.cleartext = new byte[length];
+						reader.readFully(cleartext, 0, cleartext.length);
+						s = new String( cleartext );
 						
 						//Rehash the message
-						hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
+						//hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
+						hashNeverTransmitted = HashByteArray.hashByteArray( cleartext );
 
 						//Compare the two results
-						if( !Arrays.equals( hashNeverTransmitted, finalHash ) ) {
+						if( !Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
 							System.out.println("[WARNING]: Message integrity comprimised. Hash fingerprint varies.");
 							System.out.println("HashNeverTransmitted: " + Arrays.toString( hashNeverTransmitted ));
-							System.out.println("decryptedHashFingerprint: " + Arrays.toString( finalHash ));
+							System.out.println("decryptedHashFingerprint: " + Arrays.toString( decryptedHashFingerprint ));
 						}
 
-
-
 						//Print the message anyway
-						System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+						System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
 					}	
 				}
-				//Don't need to verify message integrity
 				else {
-					//Set the reader (BufferedReader object) to the socket input stream
-					reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
-					while( ( incomingMessage = reader.readLine()) != null ) {
-						System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
-					}
+					//System.out.println( "[ReceiveCommunications Object] NOT CHECKING INTEGRITY " );
+					reader = new DataInputStream( socket.getInputStream() );
+					this.length = reader.readInt();
+					if( length > 0 ) {
+						
+						this.cleartext = new byte[length];
+						reader.readFully(cleartext, 0, cleartext.length);
+						s = new String( cleartext );
+						System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
+					}	
 				}
-		} catch (Exception e) {
+			}	
+		} 
+		catch ( EOFException e ) {
+			System.out.println("Chat disconnected");
+			System.exit(0);
+		}
+		catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();
 		}
+
 	}
 
 	public static String getCurrentTimeStamp() {

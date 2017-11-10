@@ -163,10 +163,25 @@ public class Server {
 		        encryptedSendThread.start();
 	        }
 
-	        /*	UNENCRYPTED CHAT
+	        /*	UNENCRYPTED CHAT no security
+			*/
+	        else if( !encrypt_chat && !veryify_message_integrity ) {
+				System.out.println("[SERVER] Beginning UNENCRYPTED communications with Client...");
+				//Start a thread to send communications
+				SendCommunications send = new SendCommunications( clientSocket, serverEncryptionCipher, false );
+				Thread sendThread = new Thread( send );
+				sendThread.start();
+
+				//Start a thread to receive communications
+				ReceiveCommunications receive = new ReceiveCommunications( clientSocket, serverDecryptionCipher, serverEncryptionCipher, false );
+				Thread receiveThread = new Thread( receive );
+				receiveThread.start();
+	        }
+
+	        /*	UNENCRYPTED CHAT no security
 			*/
 	        else if( !encrypt_chat && veryify_message_integrity ) {
-				System.out.println("[SERVER] Beginning UNENCRYPTED communications with Client...");
+				System.out.println("[SERVER] Beginning UNENCRYPTED communications with Client with INTEGRITY...");
 				//Start a thread to send communications
 				SendCommunications send = new SendCommunications( clientSocket, serverEncryptionCipher, true );
 				Thread sendThread = new Thread( send );

@@ -168,8 +168,22 @@ public class Client {
             /*   UNENCRYPTED CHAT
             *    If the encryption handshake was successful we begin comms with the server
             */
-            else if( !encrypt_chat && veryify_message_integrity ) {
+            else if( !encrypt_chat && !veryify_message_integrity ) {
                 System.out.println("[CLIENT] Beginning UNENCRYPTED communications with server...");
+                ReceiveCommunications receive = new ReceiveCommunications( socketToServer, clientDecryptionCipher, clientEncryptionCipher, false );
+                Thread receiveThread = new Thread( receive );
+                receiveThread.start();
+
+                SendCommunications send = new SendCommunications( socketToServer, clientEncryptionCipher, false );
+                Thread sendThread = new Thread( send );
+                sendThread.start(); 
+            }
+
+            /*   UNENCRYPTED CHAT
+            *    If the encryption handshake was successful we begin comms with the server
+            */
+            else if( !encrypt_chat && veryify_message_integrity ) {
+                System.out.println("[CLIENT] Beginning UNENCRYPTED communications with server with INTEGRITY...");
                 ReceiveCommunications receive = new ReceiveCommunications( socketToServer, clientDecryptionCipher, clientEncryptionCipher, true );
                 Thread receiveThread = new Thread( receive );
                 receiveThread.start();
@@ -177,6 +191,10 @@ public class Client {
                 SendCommunications send = new SendCommunications( socketToServer, clientEncryptionCipher, true );
                 Thread sendThread = new Thread( send );
                 sendThread.start(); 
+            }
+
+            else {
+                System.out.println("Nothing exists for the options you chose");
             }
         }
         else { //The chat security parameters do not match, so don't don't initiate a session
