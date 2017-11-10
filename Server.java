@@ -141,15 +141,26 @@ public class Server {
 	        /*  ENCRYPTED CHAT
 	        *   If the encryption handshake was successful we begin comms with the server
 	        */
-	        if( encrypt_chat ) {
-		        System.out.println("[SERVER] Beginning ENCRYPTED comms with Client...");
+	        if( encrypt_chat && veryify_message_integrity) {
+		        System.out.println("[SERVER] Beginning ENCRYPTED comms with Client, message INTEGRITY being checked...");
 		        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher, serverEncryptionCipher, true );
 		        Thread encryptedReceiveThread = new Thread( encryptedReceive );
 		        encryptedReceiveThread.start();
 
 		        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher, true );
 		        Thread encryptedSendThread = new Thread( encryptedSend );
-		        encryptedSendThread.start();	
+		        encryptedSendThread.start();
+	        }
+
+	        else if( encrypt_chat && !veryify_message_integrity )  {
+				System.out.println("[SERVER] Beginning ENCRYPTED comms with Client...");
+		        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher, serverEncryptionCipher, false );
+		        Thread encryptedReceiveThread = new Thread( encryptedReceive );
+		        encryptedReceiveThread.start();
+
+		        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher, false );
+		        Thread encryptedSendThread = new Thread( encryptedSend );
+		        encryptedSendThread.start();
 	        }
 
 	        /*	UNENCRYPTED CHAT
