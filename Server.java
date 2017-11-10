@@ -143,11 +143,11 @@ public class Server {
 	        */
 	        if( encrypt_chat ) {
 		        System.out.println("[SERVER] Beginning ENCRYPTED comms with Client...");
-		        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher );
+		        ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( clientSocket, serverDecryptionCipher, serverEncryptionCipher, true );
 		        Thread encryptedReceiveThread = new Thread( encryptedReceive );
 		        encryptedReceiveThread.start();
 
-		        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher );
+		        SendEncryptedComms encryptedSend = new SendEncryptedComms( clientSocket, serverEncryptionCipher, true );
 		        Thread encryptedSendThread = new Thread( encryptedSend );
 		        encryptedSendThread.start();	
 	        }

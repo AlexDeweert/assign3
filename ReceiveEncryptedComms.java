@@ -29,18 +29,25 @@ public class ReceiveEncryptedComms implements Runnable {
 	private DataInputStream reader = null;
 	private byte[] ciphertext;
 	private byte[] recovered;
+	private byte[] decryptedHashFingerprint;
+	private byte[] encryptedHashFingerprint;
+	private byte[] hashNeverTransmitted;
 	private int length;
 	private String s;
 	private Cipher decryptionCipher;
+	private Cipher encryptionCipher;
+	private boolean receiveFingerprintFirst;
 
 	/*
 	*	Set the socket object to the socket parameter which
 	*	had been passed in likely by a Server or Client object.
 	*	Set the byte array to that which was passed in by a client or server
 	*/
-	public ReceiveEncryptedComms( Socket socket, Cipher decryptionCipher ) {
+	public ReceiveEncryptedComms( Socket socket, Cipher decryptionCipher, Cipher encryptionCipher, boolean receiveFingerprintFirst ) {
 		this.socket = socket;
 		this.decryptionCipher = decryptionCipher;
+		this.encryptionCipher = encryptionCipher;
+		this.receiveFingerprintFirst = receiveFingerprintFirst;
 	}
 
 	/*
@@ -52,15 +59,58 @@ public class ReceiveEncryptedComms implements Runnable {
 
 		try {
 			while( true ) {
-				reader = new DataInputStream( socket.getInputStream() );
-				this.length = reader.readInt();
-				if( length > 0 ) {
-					//System.out.println( "[ReceiveEncryptedComms Object] receiving byte array of size " + length + "...");
-					this.ciphertext = new byte[length];
-					reader.readFully(ciphertext, 0, ciphertext.length);
-					recovered = decryptionCipher.doFinal(ciphertext);
-					s = new String( recovered );
-					System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
+
+				//Receive an encypted hash fingerprint
+				//Decrypt the hashed fingerprint
+				
+				//Receive the actual message
+				//Descrypt the actual message
+				//Rehash the message
+
+				//Compare the two hashes, if equal good
+				//If not equal warn the user
+
+				//Receive an encrypted hash fingerprint
+				if( receiveFingerprintFirst ) {
+					reader = new DataInputStream( socket.getInputStream() );
+					this.length = reader.readInt();
+					if( length > 0 ) {
+						this.encryptedHashFingerprint = new byte[length];
+
+						reader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
+						//Decrypt the has fingerprint
+						decryptedHashFingerprint = decryptionCipher.doFinal(encryptedHashFingerprint);
+
+						//Receive the actual message
+						this.length = reader.readInt();
+						this.ciphertext = new byte[length];
+						reader.readFully(ciphertext, 0, ciphertext.length);
+						recovered = decryptionCipher.doFinal(ciphertext);
+						s = new String( recovered );
+						
+						//Rehash the message
+						hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
+
+						//Compare the two results
+						if( Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
+							System.out.println("[WARNING]: Message integrity comprimised. Hash fingerprint varies.");
+						}
+
+						//Print the message anyway
+						System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
+					}	
+				}
+				else {
+					reader = new DataInputStream( socket.getInputStream() );
+					this.length = reader.readInt();
+					if( length > 0 ) {
+						//System.out.println( "[ReceiveEncryptedComms Object] receiving byte array of size " + length + "...");
+						this.ciphertext = new byte[length];
+						reader.readFully(ciphertext, 0, ciphertext.length);
+						recovered = decryptionCipher.doFinal(ciphertext);
+						s = new String( recovered );
+						System.out.println("[" + getCurrentTimeStamp() + " Received]: " + s);
+					}	
 				}
 			}	
 		} 

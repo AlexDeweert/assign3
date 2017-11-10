@@ -27,16 +27,19 @@ public class SendEncryptedComms implements Runnable {
 	private DataOutputStream writer = null;
 	private byte[] cleartext;
 	private byte[] ciphertext;
+	private byte[] fingerprint;
 	private String message;
 	private Cipher encryptionCipher;
+	private boolean sendFingerprintFirst;
 	/*
 	*	Set the socket object to the socket parameter which
 	*	had been passed in likely by a Server or Client object.
 	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
 	*/
-	public SendEncryptedComms( Socket socket, Cipher encryptionCipher ) {
+	public SendEncryptedComms( Socket socket, Cipher encryptionCipher, boolean sendFingerprintFirst) {
 		this.socket = socket;
 		this.encryptionCipher = encryptionCipher;
+		this.sendFingerprintFirst = sendFingerprintFirst;
 	}
 
 	/*
@@ -58,10 +61,24 @@ public class SendEncryptedComms implements Runnable {
 				cleartext = message.getBytes();
 				//encrypt the cleatext into a ciphertext using a passrf in cipher
 				ciphertext = encryptionCipher.doFinal(cleartext);
-				//Write the length of the byte array to the stream
-				writer.writeInt( ciphertext.length );
-				//Write the actual byte message to the byte stream
-				writer.write(ciphertext);
+				
+				//If we're sending a fingerprint, we send that ahead of the message
+				if( sendFingerprintFirst ) {
+
+					//First send an encrypted hashed version of the plaintext
+					HashByteArray.sendHash( HashByteArray.hashByteArray( cleartext ), socket, encryptionCipher );
+
+					//THen send the ciphertext, the receivier will decypt the ciphertext
+					//then hash it and make sure the hash values match up
+					writer.writeInt( ciphertext.length );
+					writer.write( ciphertext );
+				}
+				else {
+					//Write the length of the byte array to the stream
+					writer.writeInt( ciphertext.length );
+					//Write the actual byte message to the byte stream
+					writer.write(ciphertext);	
+				}
 			}
 
 		} catch (Exception e) {
