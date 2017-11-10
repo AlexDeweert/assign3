@@ -81,7 +81,7 @@ public class ReceiveEncryptedComms implements Runnable {
 						reader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
 						//Decrypt the has fingerprint
 						decryptedHashFingerprint = decryptionCipher.doFinal(encryptedHashFingerprint);
-						finalHash = HashByteArray.decryptHash( decryptedHashFingerprint, decryptionCipher );
+						//finalHash = HashByteArray.decryptHash( decryptedHashFingerprint, decryptionCipher );
 
 						//Receive the actual message
 						this.length = reader.readInt();
@@ -92,13 +92,13 @@ public class ReceiveEncryptedComms implements Runnable {
 						
 						//Rehash the message
 						//hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
-						hashNeverTransmitted = HashByteArray.encryptHash( recovered, encryptionCipher );
+						hashNeverTransmitted = HashByteArray.hashByteArray( recovered );
 
 						//Compare the two results
-						if( !Arrays.equals( hashNeverTransmitted, finalHash ) ) {
+						if( !Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
 							System.out.println("[WARNING]: Message integrity comprimised. Hash fingerprint varies.");
 							System.out.println("HashNeverTransmitted: " + Arrays.toString( hashNeverTransmitted ));
-							System.out.println("decryptedHashFingerprint: " + Arrays.toString( finalHash ));
+							System.out.println("decryptedHashFingerprint: " + Arrays.toString( decryptedHashFingerprint ));
 						}
 
 						//Print the message anyway
