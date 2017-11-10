@@ -143,8 +143,8 @@ public class Client {
             /*  ENCRYPTED CHAT
             *   If the encryption handshake was successful we begin comms with the server
             */
-            if( encrypt_chat ) {
-                System.out.println("[CLIENT] Beginning ENCRYPTED communications with server...");
+            if( encrypt_chat && veryify_message_integrity ) {
+                System.out.println("[CLIENT] Beginning ENCRYPTED comms, checking message INTEGRITY with server...");
                 ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( socketToServer, clientDecryptionCipher, clientEncryptionCipher, true );
                 Thread encryptedReceiveThread = new Thread( encryptedReceive );
                 encryptedReceiveThread.start();
@@ -154,16 +154,27 @@ public class Client {
                 encryptedSendThread.start();    
             }
 
+            else if( encrypt_chat && !veryify_message_integrity )  {
+                System.out.println("[CLIENT] Beginning ENCRYPTED comms with server...");
+                ReceiveEncryptedComms encryptedReceive = new ReceiveEncryptedComms( socketToServer, clientDecryptionCipher, clientEncryptionCipher, false );
+                Thread encryptedReceiveThread = new Thread( encryptedReceive );
+                encryptedReceiveThread.start();
+
+                SendEncryptedComms encryptedSend = new SendEncryptedComms( socketToServer, clientEncryptionCipher, false );
+                Thread encryptedSendThread = new Thread( encryptedSend );
+                encryptedSendThread.start();    
+            }
+
             /*   UNENCRYPTED CHAT
             *    If the encryption handshake was successful we begin comms with the server
             */
-            else {
+            else if( !encrypt_chat && veryify_message_integrity ) {
                 System.out.println("[CLIENT] Beginning UNENCRYPTED communications with server...");
-                ReceiveCommunications receive = new ReceiveCommunications( socketToServer );
+                ReceiveCommunications receive = new ReceiveCommunications( socketToServer, clientDecryptionCipher, clientEncryptionCipher, true );
                 Thread receiveThread = new Thread( receive );
                 receiveThread.start();
 
-                SendCommunications send = new SendCommunications( socketToServer );
+                SendCommunications send = new SendCommunications( socketToServer, clientEncryptionCipher, true );
                 Thread sendThread = new Thread( send );
                 sendThread.start(); 
             }

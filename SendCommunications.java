@@ -1,10 +1,15 @@
-/*
-*	SendCommunications.java
-*	Utilizes threads for chat concurrency
-*/
-
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
+import java.io.*;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.spec.*;
+import java.security.interfaces.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import javax.crypto.interfaces.*;
+import com.sun.crypto.provider.SunJCE;
 
 /*
 *	SendCommunications is threadwise class
@@ -21,14 +26,18 @@ public class SendCommunications implements Runnable {
 	private Socket socket = null;
 	private PrintWriter writer = null;
 	private String outgoingMessage = "";
+	private Cipher encryptionCipher;
+	private boolean sendFingerprintFirst;
 
 	/*
 	*	Set the socket object to the socket parameter which
 	*	had been passed in likely by a Server or Client object.
 	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
 	*/
-	public SendCommunications( Socket socket ) {
+	public SendCommunications( Socket socket, Cipher encryptionCipher, boolean sendFingerprintFirst ) {
 		this.socket = socket;
+		this.encryptionCipher = encryptionCipher;
+		this.sendFingerprintFirst = sendFingerprintFirst;
 	}
 
 	/*
@@ -48,12 +57,32 @@ public class SendCommunications implements Runnable {
 
 			//We're always ready to send a message
 			while( true ) {
-				//Set the outgoing message string to whatever the user enters in terminal
-				outgoingMessage = userInput.readLine();
-				//Print what the user entered into the socket's output stream
-				writer.println( outgoingMessage );
-				//Flush the message
-				writer.flush();
+
+
+				//If we're sending a fingerprint, we send that ahead of the message
+				if( sendFingerprintFirst ) {
+
+					//Set the outgoing message string to whatever the user enters in terminal
+					outgoingMessage = userInput.readLine();
+
+					//First send an encrypted hashed version of the plaintext
+					HashByteArray.sendHash( (HashByteArray.hashByteArray(outgoingMessage.getBytes())), socket, encryptionCipher );
+
+					//Print what the user entered into the socket's output stream
+					writer.println( outgoingMessage );
+					//Flush the message
+					writer.flush();	
+				}
+				else {
+					//Set the outgoing message string to whatever the user enters in terminal
+					outgoingMessage = userInput.readLine();
+					//Print what the user entered into the socket's output stream
+					writer.println( outgoingMessage );
+					//Flush the message
+					writer.flush();	
+				}
+
+				
 			}
 
 		} catch (Exception e) {

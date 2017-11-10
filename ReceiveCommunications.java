@@ -1,7 +1,17 @@
-import java.io.*;
-import java.net.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.io.*;
+import java.net.*;
+import java.util.Arrays;
+import java.io.*;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.spec.*;
+import java.security.interfaces.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import javax.crypto.interfaces.*;
+import com.sun.crypto.provider.SunJCE;
 
 /*
 *	ReceiveCommunications is threadwise class
@@ -17,15 +27,27 @@ public class ReceiveCommunications implements Runnable {
 	*/
 	private Socket socket = null;
 	private BufferedReader reader = null;
+	private DataInputStream fingerprintReader = null;
 	private String incomingMessage = "";
+	private byte[] recovered;
+	private byte[] decryptedHashFingerprint;
+	private byte[] encryptedHashFingerprint;
+	private byte[] hashNeverTransmitted;
+	private Cipher decryptionCipher;
+	private Cipher encryptionCipher;
+	private boolean receiveFingerprintFirst;
+	private int length;
 
 	/*
 	*	Set the socket object to the socket parameter which
 	*	had been passed in likely by a Server or Client object.
 	*	Both the Server and Client utilise regular Socket objects (not ServerSocket's)
 	*/
-	public ReceiveCommunications( Socket socket ) {
+	public ReceiveCommunications( Socket socket, Cipher decryptionCipher, Cipher encryptionCipher, boolean receiveFingerprintFirst ) {
 		this.socket = socket;
+		this.decryptionCipher = decryptionCipher;
+		this.encryptionCipher = encryptionCipher;
+		this.receiveFingerprintFirst = receiveFingerprintFirst;
 	}
 
 	/*
@@ -37,14 +59,50 @@ public class ReceiveCommunications implements Runnable {
 
 		try {
 
-			//Set the reader (BufferedReader object) to the socket input stream
-			reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
-			//while( true ) {
-				//While there exists data in the inputstream print it out
-				while( ( incomingMessage = reader.readLine()) != null ) {
-					System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+
+			if( receiveFingerprintFirst ) {
+					fingerprintReader = new DataInputStream( socket.getInputStream() );
+					this.length = fingerprintReader.readInt();
+					if( length > 0 ) {
+						this.encryptedHashFingerprint = new byte[length];
+
+						fingerprintReader.readFully(encryptedHashFingerprint, 0, encryptedHashFingerprint.length);
+						//Decrypt the has fingerprint
+						decryptedHashFingerprint = decryptionCipher.doFinal(encryptedHashFingerprint);
+
+						//Receive the actual message
+						// this.length = fingerprintReader.readInt();
+						// this.ciphertext = new byte[length];
+						// fingerprintReader.readFully(ciphertext, 0, ciphertext.length);
+						// recovered = decryptionCipher.doFinal(ciphertext);
+						// s = new String( recovered );
+						//Set the reader (BufferedReader object) to the socket input stream
+						reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+						while( ( incomingMessage = reader.readLine()) != null ) {
+							System.out.println("Received a message: " + incomingMessage );
+							recovered = incomingMessage.getBytes();
+						}
+						
+						//Rehash the message
+						hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
+
+						//Compare the two results
+						if( !Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
+							System.out.println("[WARNING]: Message integrity comprimised. Hash fingerprint varies.");
+						}
+
+						//Print the message anyway
+						System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+					}	
 				}
-			//}
+				//Don't need to verify message integrity
+				else {
+					//Set the reader (BufferedReader object) to the socket input stream
+					reader = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+					while( ( incomingMessage = reader.readLine()) != null ) {
+						System.out.println( "[" + getCurrentTimeStamp() + " Received]: " + incomingMessage );
+					}
+				}
 		} catch (Exception e) {
 			System.out.println( e.toString() );
 			e.printStackTrace();

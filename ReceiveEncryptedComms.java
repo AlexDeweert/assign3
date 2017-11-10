@@ -92,7 +92,7 @@ public class ReceiveEncryptedComms implements Runnable {
 						hashNeverTransmitted = new byte[ (HashByteArray.encryptHash( recovered, encryptionCipher )).length ];
 
 						//Compare the two results
-						if( Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
+						if( !Arrays.equals( hashNeverTransmitted, decryptedHashFingerprint ) ) {
 							System.out.println("[WARNING]: Message integrity comprimised. Hash fingerprint varies.");
 						}
 
